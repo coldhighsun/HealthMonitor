@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <!-- Redirect all build outputs to a single top-level artifacts directory -->
+    <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
+    <!-- Use latest C# regardless of target framework (needed for netstandard2.0) -->
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+</Project>
