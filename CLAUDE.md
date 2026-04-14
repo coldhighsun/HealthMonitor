@@ -21,6 +21,7 @@ Build artifacts go to `/artifacts/bin/` (configured in `Directory.Build.props`).
 | Layer | Purpose |
 |---|---|
 | `Abstractions/` | `IHealthMonitor`, `IStopwatch`, `ISystemTimeProvider` |
+| `Detection/` | `RealStopwatch`, `SystemTimeProvider` — production implementations of the abstractions |
 | `Monitors/` | `HealthMonitorBase` (state machine), `NamedHealthMonitor`, `HealthMonitorCoordinator` |
 | `Services/` | `HealthMonitorHostedService` — background loop, ticks coordinator at `MinCheckInterval` |
 | `Configuration/` | `HealthMonitorOptions`, `HealthMonitorRegistration` |
@@ -31,6 +32,8 @@ Build artifacts go to `/artifacts/bin/` (configured in `Directory.Build.props`).
 
 - **Healthy → Degraded**: no `Signal()` received within `DegradedThreshold` (default 30 s)
 - **Degraded → Healthy**: `Signal()` received while degraded; fires `Recovered` event immediately
+
+`HealthMonitorBase` uses three independent `IStopwatch` instances: `signalStopwatch` (reset on every `Signal()`), `checkStopwatch` (gates background tick frequency per `CheckInterval`), and `stateStopwatch` (measures time-in-state for event args). All shared state is guarded by a single `lock` so `Signal()` is safe to call from any thread concurrently with `Tick()`.
 
 ### DI registration
 

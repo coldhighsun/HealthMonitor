@@ -1,4 +1,4 @@
-using HealthMonitor.Abstractions;
+using HealthMonitor.Core.Abstractions;
 
 namespace HealthMonitor.Tests.Fakes;
 

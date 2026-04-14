@@ -1,8 +1,8 @@
-using HealthMonitor.Abstractions;
-using HealthMonitor.Configuration;
-using HealthMonitor.Events;
+using HealthMonitor.Core.Abstractions;
+using HealthMonitor.Core.Configuration;
+using HealthMonitor.Core.Events;
 
-namespace HealthMonitor.Monitors;
+namespace HealthMonitor.Core.Monitors;
 
 /// <summary>
 /// Core state machine for a health monitor.
@@ -20,35 +20,49 @@ namespace HealthMonitor.Monitors;
 /// background <see cref="Tick"/>. A lock guards all shared state.
 /// </para>
 /// </summary>
-internal abstract class HealthMonitorBase
+/// <param name="checkStopwatch">Injected stopwatch instance for check interval timing.</param>
+/// <param name="clock">Injected system time provider for event timestamps.</param>
+/// <param name="options">Injected options for this monitor instance.</param>
+/// <param name="signalStopwatch">Injected stopwatch instance for degradation timing.</param>
+/// <param name="stateStopwatch">Injected stopwatch instance for state duration tracking.</param>
+internal abstract class HealthMonitorBase(
+    ISystemTimeProvider clock,
+    HealthMonitorOptions options,
+    IStopwatch signalStopwatch,
+    IStopwatch checkStopwatch,
+    IStopwatch stateStopwatch)
 {
-    private readonly ISystemTimeProvider _clock;
-    private readonly HealthMonitorOptions _options;
-    private readonly IStopwatch _signalStopwatch;
-    private readonly IStopwatch _checkStopwatch;
-    private readonly IStopwatch _stateStopwatch;
+    /// <summary>
+    /// Lock object to guard all shared state. Both <see cref="Signal"/> and <see cref="Tick"/> acquire this lock,
+    /// </summary>
     private readonly object _lock = new();
 
+    /// <summary>
+    /// Indicates whether the monitor is currently degraded. Guarded by <see cref="_lock"/>.
+    /// </summary>
     private bool _isDegraded;
 
-    protected HealthMonitorBase(
-        ISystemTimeProvider clock,
-        HealthMonitorOptions options,
-        IStopwatch signalStopwatch,
-        IStopwatch checkStopwatch,
-        IStopwatch stateStopwatch)
-    {
-        _clock = clock;
-        _options = options;
-        _signalStopwatch = signalStopwatch;
-        _checkStopwatch = checkStopwatch;
-        _stateStopwatch = stateStopwatch;
-    }
-
-    public bool IsHealthy { get { lock (_lock) return !_isDegraded; } }
-
+    /// <summary>
+    /// Occurs when the health status of the monitored component degrades below the acceptable threshold.
+    /// </summary>
     public event EventHandler<HealthDegradedEventArgs>? Degraded;
+
+    /// <summary>
+    /// Occurs when health has been fully recovered.
+    /// </summary>
     public event EventHandler<HealthRecoveredEventArgs>? Recovered;
+
+    /// <summary>
+    /// Gets a value indicating whether the current state is healthy.
+    /// </summary>
+    public bool IsHealthy
+    {
+        get
+        {
+            lock (_lock)
+                return !_isDegraded;
+        }
+    }
 
     /// <summary>
     /// Reports a heartbeat. Resets the degradation timer.
@@ -60,20 +74,22 @@ internal abstract class HealthMonitorBase
 
         lock (_lock)
         {
-            _signalStopwatch.Restart();
+            signalStopwatch.Restart();
 
             if (_isDegraded)
             {
-                var degradedDuration = _stateStopwatch.Elapsed;
+                var degradedDuration = stateStopwatch.Elapsed;
                 _isDegraded = false;
-                _stateStopwatch.Restart();
-                recoveredArgs = new HealthRecoveredEventArgs(_options.Name, _clock.UtcNow, degradedDuration);
+                stateStopwatch.Restart();
+                recoveredArgs = new(options.Name, clock.UtcNow, degradedDuration);
             }
         }
 
         // Fire outside the lock to avoid holding it during event handler execution
         if (recoveredArgs is not null)
+        {
             OnRecovered(recoveredArgs);
+        }
     }
 
     /// <summary>
@@ -86,17 +102,17 @@ internal abstract class HealthMonitorBase
 
         lock (_lock)
         {
-            if (_checkStopwatch.Elapsed < _options.CheckInterval)
+            if (checkStopwatch.Elapsed < options.CheckInterval)
                 return;
 
-            _checkStopwatch.Restart();
+            checkStopwatch.Restart();
 
-            if (!_isDegraded && _signalStopwatch.Elapsed >= _options.DegradedThreshold)
+            if (!_isDegraded && signalStopwatch.Elapsed >= options.DegradedThreshold)
             {
-                var healthyDuration = _stateStopwatch.Elapsed;
+                var healthyDuration = stateStopwatch.Elapsed;
                 _isDegraded = true;
-                _stateStopwatch.Restart();
-                degradedArgs = new HealthDegradedEventArgs(_options.Name, _clock.UtcNow, healthyDuration);
+                stateStopwatch.Restart();
+                degradedArgs = new(options.Name, clock.UtcNow, healthyDuration);
             }
         }
 
@@ -104,9 +120,17 @@ internal abstract class HealthMonitorBase
             OnDegraded(degradedArgs);
     }
 
+    /// <summary>
+    /// Raises the Degraded event to notify subscribers that the system health has transitioned to a degraded state.
+    /// </summary>
+    /// <param name="args">The event data containing information about the degraded health state.</param>
     protected virtual void OnDegraded(HealthDegradedEventArgs args)
         => Degraded?.Invoke(this, args);
 
+    /// <summary>
+    /// Raises the Recovered event to notify subscribers that the system health has transitioned back to a healthy state.
+    /// </summary>
+    /// <param name="args">The event data containing information about the recovered health state.</param>
     protected virtual void OnRecovered(HealthRecoveredEventArgs args)
         => Recovered?.Invoke(this, args);
 }

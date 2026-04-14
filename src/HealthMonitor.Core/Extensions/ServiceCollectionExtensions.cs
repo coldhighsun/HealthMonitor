@@ -1,13 +1,13 @@
-using HealthMonitor.Abstractions;
-using HealthMonitor.Configuration;
-using HealthMonitor.Detection;
-using HealthMonitor.Monitors;
-using HealthMonitor.Services;
+using HealthMonitor.Core.Abstractions;
+using HealthMonitor.Core.Configuration;
+using HealthMonitor.Core.Detection;
+using HealthMonitor.Core.Monitors;
+using HealthMonitor.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
-namespace HealthMonitor.Extensions;
+namespace HealthMonitor.Core.Extensions;
 
 /// <summary>
 /// Extension methods for registering health monitors with <see cref="IServiceCollection"/>.
@@ -36,7 +36,9 @@ public static class ServiceCollectionExtensions
         Action<HealthMonitorOptions>? configure = null)
     {
         if (string.IsNullOrWhiteSpace(name))
+        {
             throw new ArgumentException("Monitor name must not be null or whitespace.", nameof(name));
+        }
 
         // Register shared infrastructure once
         services.TryAddSingleton<ISystemTimeProvider, SystemTimeProvider>();

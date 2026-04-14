@@ -1,6 +1,6 @@
-using HealthMonitor.Events;
+using HealthMonitor.Core.Events;
 
-namespace HealthMonitor.Abstractions;
+namespace HealthMonitor.Core.Abstractions;
 
 /// <summary>
 /// Represents a single named health monitor.
@@ -14,18 +14,6 @@ namespace HealthMonitor.Abstractions;
 /// </summary>
 public interface IHealthMonitor
 {
-    /// <summary>Unique logical name of this monitor.</summary>
-    string Name { get; }
-
-    /// <summary>Returns <c>true</c> when the monitor is in a healthy state.</summary>
-    bool IsHealthy { get; }
-
-    /// <summary>
-    /// Reports a heartbeat. Resets the degraded-threshold timer.
-    /// If the monitor was degraded, immediately fires <see cref="Recovered"/>.
-    /// </summary>
-    void Signal();
-
     /// <summary>
     /// Raised when no signal has been received within
     /// <see cref="Configuration.HealthMonitorOptions.DegradedThreshold"/>.
@@ -36,4 +24,26 @@ public interface IHealthMonitor
     /// Raised immediately when <see cref="Signal"/> is called while the monitor is degraded.
     /// </summary>
     event EventHandler<HealthRecoveredEventArgs> Recovered;
+
+    /// <summary>
+    /// Returns <c>true</c> when the monitor is in a healthy state.
+    /// </summary>
+    bool IsHealthy
+    {
+        get;
+    }
+
+    /// <summary>
+    /// Unique logical name of this monitor.
+    /// </summary>
+    string Name
+    {
+        get;
+    }
+
+    /// <summary>
+    /// Reports a heartbeat. Resets the degraded-threshold timer.
+    /// If the monitor was degraded, immediately fires <see cref="Recovered"/>.
+    /// </summary>
+    void Signal();
 }

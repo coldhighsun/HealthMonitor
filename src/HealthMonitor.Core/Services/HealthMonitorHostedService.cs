@@ -1,46 +1,40 @@
-using HealthMonitor.Monitors;
+using HealthMonitor.Core.Monitors;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace HealthMonitor.Services;
+namespace HealthMonitor.Core.Services;
 
 /// <summary>
 /// Background service that drives degradation-check ticks for all registered health monitors.
 /// </summary>
-internal sealed class HealthMonitorHostedService : BackgroundService
+/// <param name="coordinator">Injected coordinator that manages all monitors and their check intervals.</param>
+/// <param name="logger">Injected logger for logging monitor ticks and errors.</param>
+internal sealed class HealthMonitorHostedService(
+    HealthMonitorCoordinator coordinator,
+    ILogger<HealthMonitorHostedService> logger)
+    : BackgroundService
 {
-    private readonly HealthMonitorCoordinator _coordinator;
-    private readonly ILogger<HealthMonitorHostedService> _logger;
-
-    public HealthMonitorHostedService(
-        HealthMonitorCoordinator coordinator,
-        ILogger<HealthMonitorHostedService> logger)
-    {
-        _coordinator = coordinator;
-        _logger = logger;
-    }
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation(
+        logger.LogInformation(
             "HealthMonitor started with {Count} monitor(s), check loop every {Interval}.",
-            _coordinator.Monitors.Count,
-            _coordinator.MinCheckInterval);
+            coordinator.Monitors.Count,
+            coordinator.MinCheckInterval);
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                _coordinator.TickAll();
+                coordinator.TickAll();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled exception during health monitor tick.");
+                logger.LogError(ex, "Unhandled exception during health monitor tick.");
             }
 
             try
             {
-                await Task.Delay(_coordinator.MinCheckInterval, stoppingToken);
+                await Task.Delay(coordinator.MinCheckInterval, stoppingToken);
             }
             catch (OperationCanceledException)
             {
@@ -48,6 +42,6 @@ internal sealed class HealthMonitorHostedService : BackgroundService
             }
         }
 
-        _logger.LogInformation("HealthMonitor stopped.");
+        logger.LogInformation("HealthMonitor stopped.");
     }
 }
