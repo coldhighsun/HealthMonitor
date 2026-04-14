@@ -1,14 +1,13 @@
-namespace HealthMonitor.Configuration;
+namespace HealthMonitor.Core.Configuration;
 
 /// <summary>
 /// Internal record that binds a set of options to a monitor instance during DI composition.
 /// </summary>
-internal sealed class HealthMonitorRegistration
+/// <param name="options">Options for the monitor instance being registered.</param>
+internal sealed class HealthMonitorRegistration(HealthMonitorOptions options)
 {
-    public HealthMonitorOptions Options { get; }
-
-    public HealthMonitorRegistration(HealthMonitorOptions options)
+    public HealthMonitorOptions Options
     {
-        Options = options;
-    }
+        get;
+    } = options;
 }

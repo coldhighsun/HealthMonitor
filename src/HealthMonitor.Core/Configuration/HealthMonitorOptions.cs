@@ -1,4 +1,4 @@
-namespace HealthMonitor.Configuration;
+namespace HealthMonitor.Core.Configuration;
 
 /// <summary>
 /// Configuration options for a single <see cref="Abstractions.IHealthMonitor"/> instance.
@@ -6,9 +6,11 @@ namespace HealthMonitor.Configuration;
 public sealed class HealthMonitorOptions
 {
     /// <summary>
-    /// Unique logical name for this monitor. Set automatically by <c>AddHealthMonitor</c>.
+    /// How frequently the background service checks whether the degraded threshold has been exceeded.
+    /// Should be significantly shorter than <see cref="DegradedThreshold"/> for timely detection.
+    /// Default: 5 seconds.
     /// </summary>
-    public string Name { get; set; } = string.Empty;
+    public TimeSpan CheckInterval { get; set; } = TimeSpan.FromSeconds(5);
 
     /// <summary>
     /// Maximum time allowed between consecutive <see cref="Abstractions.IHealthMonitor.Signal"/> calls
@@ -18,9 +20,7 @@ public sealed class HealthMonitorOptions
     public TimeSpan DegradedThreshold { get; set; } = TimeSpan.FromSeconds(30);
 
     /// <summary>
-    /// How frequently the background service checks whether the degraded threshold has been exceeded.
-    /// Should be significantly shorter than <see cref="DegradedThreshold"/> for timely detection.
-    /// Default: 5 seconds.
+    /// Unique logical name for this monitor. Set automatically by <c>AddHealthMonitor</c>.
     /// </summary>
-    public TimeSpan CheckInterval { get; set; } = TimeSpan.FromSeconds(5);
+    public string Name { get; set; } = string.Empty;
 }

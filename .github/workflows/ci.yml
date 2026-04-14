@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # MinVer needs full history to compute version from tags
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.x
+            9.x
+            10.x
+
+      - name: Build
+        run: dotnet build src/HealthMonitor.Core/HealthMonitor.Core.csproj --configuration Release
+
+      - name: Test
+        run: dotnet test --configuration Release
+
+      - name: Pack
+        run: dotnet pack src/HealthMonitor.Core/HealthMonitor.Core.csproj --configuration Release --no-build --output ./nupkg
+
+      - name: Push to NuGet
+        run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate

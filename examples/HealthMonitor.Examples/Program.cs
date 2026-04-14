@@ -1,5 +1,5 @@
-using HealthMonitor.Abstractions;
-using HealthMonitor.Extensions;
+using HealthMonitor.Core.Abstractions;
+using HealthMonitor.Core.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
