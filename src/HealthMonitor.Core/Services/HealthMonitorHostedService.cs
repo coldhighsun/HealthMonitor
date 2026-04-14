@@ -14,6 +14,13 @@ internal sealed class HealthMonitorHostedService(
     ILogger<HealthMonitorHostedService> logger)
     : BackgroundService
 {
+    /// <summary>
+    /// Executes the background health monitoring loop until cancellation is requested.
+    /// </summary>
+    /// <param name="stoppingToken">
+    /// A cancellation token that signals when the execution should stop. Monitoring will continue until cancellation is requested.
+    /// </param>
+    /// <returns>A task that represents the asynchronous execution operation.</returns>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         logger.LogInformation(

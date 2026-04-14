@@ -14,6 +14,15 @@ A lightweight .NET library for monitoring application health via periodic heartb
 - **Keyed injection** — resolve a specific monitor by name via `IServiceProvider.GetRequiredKeyedService<IHealthMonitor>("name")` (.NET 8+)
 - **Testable** — `IStopwatch` and `ISystemTimeProvider` abstractions decouple timing from wall-clock time
 
+## Supported Frameworks
+
+| Target | Keyed DI (`GetRequiredKeyedService`) |
+|---|---|
+| `netstandard2.0` | — |
+| `net8.0` | ✓ |
+| `net9.0` | ✓ |
+| `net10.0` | ✓ |
+
 ## Installation
 
 ```bash
@@ -126,6 +135,15 @@ Build outputs land in `./artifacts/bin/`.
 - **DI 优先** — 集成 `IServiceCollection`，以 `BackgroundService` 形式运行
 - **按名称注入** — 通过 `IServiceProvider.GetRequiredKeyedService<IHealthMonitor>("name")` 按名称解析（.NET 8+）
 - **易于测试** — `IStopwatch` 和 `ISystemTimeProvider` 抽象解耦了时间依赖
+
+## 支持的目标框架
+
+| 目标框架 | 键控 DI（`GetRequiredKeyedService`） |
+|---|---|
+| `netstandard2.0` | — |
+| `net8.0` | ✓ |
+| `net9.0` | ✓ |
+| `net10.0` | ✓ |
 
 ## 安装
 
