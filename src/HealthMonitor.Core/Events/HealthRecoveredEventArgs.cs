@@ -10,6 +10,8 @@ namespace HealthMonitor.Core.Events;
 public sealed class HealthRecoveredEventArgs(string monitorName, DateTimeOffset timestamp, TimeSpan degradedDuration)
     : HealthEventArgs(monitorName, timestamp)
 {
-    /// <summary>How long the monitor was in a degraded state before recovering.</summary>
+    /// <summary>
+    /// How long the monitor was in a degraded state before recovering.
+    /// </summary>
     public TimeSpan DegradedDuration { get; } = degradedDuration;
 }
