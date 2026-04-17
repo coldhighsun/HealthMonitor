@@ -22,7 +22,7 @@ Build artifacts go to `/artifacts/bin/` (configured in `Directory.Build.props`).
 |---|---|
 | `Abstractions/` | `IHealthMonitor`, `IStopwatch`, `ISystemTimeProvider` |
 | `Detection/` | `RealStopwatch`, `SystemTimeProvider` — production implementations of the abstractions |
-| `Monitors/` | `HealthMonitorBase` (state machine), `NamedHealthMonitor`, `HealthMonitorCoordinator` |
+| `Monitors/` | `HealthMonitorBase` (state machine), `NamedHealthMonitor`, `HealthMonitorCoordinator`, `DynamicHealthMonitorManager` |
 | `Services/` | `HealthMonitorHostedService` — background loop, ticks coordinator at `MinCheckInterval` |
 | `Configuration/` | `HealthMonitorOptions`, `HealthMonitorRegistration` |
 | `Extensions/` | `AddHealthMonitor()` DI extension |
@@ -39,9 +39,13 @@ Build artifacts go to `/artifacts/bin/` (configured in `Directory.Build.props`).
 
 `AddHealthMonitor()` registers monitors as keyed services (by name, .NET 8+) and via `IEnumerable<IHealthMonitor>` on all targets. The hosted service resolves all monitors through the coordinator.
 
+### Dynamic registration (no DI)
+
+`DynamicHealthMonitorManager` is a standalone `IDisposable` class for runtime monitor management. Each monitor added via `Add(name, options?)` gets its own `System.Threading.Timer` firing at its `CheckInterval`. The manager exposes aggregate `Degraded` / `Recovered` events that forward from all registered monitors — subscribers added before or after `Add()` both receive events. `Remove()` disposes the timer and unsubscribes event forwarding atomically under a lock.
+
 ### Testability
 
-`IStopwatch` and `ISystemTimeProvider` abstractions allow time-controlled unit tests. The `tests/HealthMonitor.Tests/Fakes/` directory provides `FakeStopwatch` and related fakes.
+`IStopwatch` and `ISystemTimeProvider` abstractions allow time-controlled unit tests. The `tests/HealthMonitor.Tests/Fakes/` directory provides `FakeStopwatch` and related fakes. Tests use **xunit.v3** (not v2 — the assertion API differs).
 
 ### Multi-targeting
 

@@ -11,6 +11,7 @@ A lightweight .NET library for monitoring application health via periodic heartb
 - **Multiple monitors** — register any number of independent monitors, each with its own degraded threshold and check interval
 - **Two events** — `Degraded` fires when no heartbeat is received within the threshold; `Recovered` fires immediately when a signal arrives while degraded
 - **DI-first** — integrates with `IServiceCollection` and runs as a `BackgroundService`
+- **Dynamic management** — `DynamicHealthMonitorManager` adds and removes monitors at runtime; each runs its own `Timer` with per-monitor options
 - **Keyed injection** — resolve a specific monitor by name via `IServiceProvider.GetRequiredKeyedService<IHealthMonitor>("name")` (.NET 8+)
 - **Testable** — `IStopwatch` and `ISystemTimeProvider` abstractions decouple timing from wall-clock time
 
@@ -98,6 +99,44 @@ monitor.Signal();
 | `Timestamp` | `DateTimeOffset` | UTC time of the transition |
 | `DegradedDuration` | `TimeSpan` | How long the monitor was degraded before recovering |
 
+## Dynamic Monitor Management
+
+`DynamicHealthMonitorManager` lets you register and remove monitors at runtime — no DI or hosted service required. Each monitor owns its own `System.Threading.Timer` that fires at its configured `CheckInterval`.
+
+```csharp
+using var manager = new DynamicHealthMonitorManager();
+
+// Subscribe once on the manager — fires for all monitors, including those added later
+manager.Degraded  += (_, e) => Console.WriteLine($"{e.MonitorName} degraded");
+manager.Recovered += (_, e) => Console.WriteLine($"{e.MonitorName} recovered");
+
+// Add monitors at any time; each runs its own Timer at its own CheckInterval
+var db = manager.Add("database", new HealthMonitorOptions
+{
+    DegradedThreshold = TimeSpan.FromSeconds(10),
+    CheckInterval     = TimeSpan.FromSeconds(2),
+});
+
+// Heartbeat from your business logic
+db.Signal();
+
+// Add more monitors dynamically while the app runs
+var cache = manager.Add("cache", new HealthMonitorOptions
+{
+    DegradedThreshold = TimeSpan.FromSeconds(5),
+    CheckInterval     = TimeSpan.FromSeconds(1),
+});
+
+// Remove a monitor — disposes its timer and unsubscribes event forwarding
+manager.Remove("cache");
+
+// Enumerate all active monitors
+foreach (var m in manager.Monitors)
+    Console.WriteLine($"{m.Name}: {(m.IsHealthy ? "healthy" : "degraded")}");
+```
+
+`DynamicHealthMonitorManager` implements `IDisposable`; disposing it stops all timers.
+
 ## State Machine
 
 ```
@@ -133,6 +172,7 @@ Build outputs land in `./artifacts/bin/`.
 - **多监控器** — 可注册任意数量的独立监控器，每个监控器拥有独立的降级阈值和检查间隔
 - **两种事件** — 心跳超时触发 `Degraded`；降级期间收到信号立即触发 `Recovered`
 - **DI 优先** — 集成 `IServiceCollection`，以 `BackgroundService` 形式运行
+- **动态管理** — `DynamicHealthMonitorManager` 支持运行时动态添加/移除监控器，每个监控器有独立 `Timer` 和配置
 - **按名称注入** — 通过 `IServiceProvider.GetRequiredKeyedService<IHealthMonitor>("name")` 按名称解析（.NET 8+）
 - **易于测试** — `IStopwatch` 和 `ISystemTimeProvider` 抽象解耦了时间依赖
 
@@ -219,6 +259,44 @@ monitor.Signal();
 | `MonitorName` | `string` | 监控器名称 |
 | `Timestamp` | `DateTimeOffset` | 状态切换的 UTC 时间 |
 | `DegradedDuration` | `TimeSpan` | 恢复前的降级持续时长 |
+
+## 动态监控管理
+
+`DynamicHealthMonitorManager` 支持在运行时动态注册和移除监控器，无需 DI 或托管服务。每个监控器拥有独立的 `System.Threading.Timer`，按自身的 `CheckInterval` 周期触发检查。
+
+```csharp
+using var manager = new DynamicHealthMonitorManager();
+
+// 在 manager 上订阅一次 — 对所有监控器生效，包括后续动态添加的
+manager.Degraded  += (_, e) => Console.WriteLine($"{e.MonitorName} 已降级");
+manager.Recovered += (_, e) => Console.WriteLine($"{e.MonitorName} 已恢复");
+
+// 随时添加监控器，每个监控器使用自己的 Timer 和 CheckInterval
+var db = manager.Add("database", new HealthMonitorOptions
+{
+    DegradedThreshold = TimeSpan.FromSeconds(10),
+    CheckInterval     = TimeSpan.FromSeconds(2),
+});
+
+// 在业务逻辑中发送心跳
+db.Signal();
+
+// 在运行时动态添加更多监控器
+var cache = manager.Add("cache", new HealthMonitorOptions
+{
+    DegradedThreshold = TimeSpan.FromSeconds(5),
+    CheckInterval     = TimeSpan.FromSeconds(1),
+});
+
+// 移除监控器 — 立即销毁其 Timer 并取消事件转发
+manager.Remove("cache");
+
+// 枚举所有活跃监控器
+foreach (var m in manager.Monitors)
+    Console.WriteLine($"{m.Name}: {(m.IsHealthy ? "健康" : "降级")}");
+```
+
+`DynamicHealthMonitorManager` 实现了 `IDisposable`，Dispose 时会停止所有计时器。
 
 ## 状态机
 
