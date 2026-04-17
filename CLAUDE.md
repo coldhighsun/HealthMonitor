@@ -22,11 +22,11 @@ Build artifacts go to `/artifacts/bin/` (configured in `Directory.Build.props`).
 |---|---|
 | `Abstractions/` | `IHealthMonitor`, `IStopwatch`, `ISystemTimeProvider` |
 | `Detection/` | `RealStopwatch`, `SystemTimeProvider` — production implementations of the abstractions |
-| `Monitors/` | `HealthMonitorBase` (state machine), `NamedHealthMonitor`, `HealthMonitorCoordinator`, `DynamicHealthMonitorManager` |
+| `Monitors/` | `HealthMonitorBase` (state machine), `NamedHealthMonitor`, `HealthMonitorCoordinator` (fans out `Tick()` to all registered monitors), `DynamicHealthMonitorManager` |
 | `Services/` | `HealthMonitorHostedService` — background loop, ticks coordinator at `MinCheckInterval` |
-| `Configuration/` | `HealthMonitorOptions`, `HealthMonitorRegistration` |
+| `Configuration/` | `HealthMonitorOptions` (thresholds/intervals), `HealthMonitorRegistration` (name + options pair used at DI registration) |
 | `Extensions/` | `AddHealthMonitor()` DI extension |
-| `Events/` | `HealthDegradedEventArgs`, `HealthRecoveredEventArgs` |
+| `Events/` | `HealthEventArgs` (base), `HealthDegradedEventArgs`, `HealthRecoveredEventArgs` |
 
 ### State machine
 

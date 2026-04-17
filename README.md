@@ -68,6 +68,20 @@ foreach (var monitor in provider.GetRequiredService<IEnumerable<IHealthMonitor>>
 }
 ```
 
+**`netstandard2.0` — resolve by name without keyed services:**
+
+Keyed DI is not available on `netstandard2.0`. Filter the `IEnumerable<IHealthMonitor>` by name instead:
+
+```csharp
+var monitors = provider.GetRequiredService<IEnumerable<IHealthMonitor>>();
+var monitor  = monitors.First(m => m.Name == "quote-feed");
+
+monitor.Degraded  += (_, e) => Console.WriteLine($"{e.MonitorName}: degraded");
+monitor.Recovered += (_, e) => Console.WriteLine($"{e.MonitorName}: recovered");
+```
+
+Alternatively, use `DynamicHealthMonitorManager` which requires no DI at all and is fully supported on `netstandard2.0`.
+
 ### Sending Heartbeats
 
 ```csharp
@@ -228,6 +242,20 @@ foreach (var monitor in provider.GetRequiredService<IEnumerable<IHealthMonitor>>
     monitor.Recovered += (_, e) => Console.WriteLine($"{e.MonitorName}: 恢复");
 }
 ```
+
+**`netstandard2.0` — 不使用键控服务按名称解析：**
+
+`netstandard2.0` 下不支持键控 DI，可通过 `IEnumerable<IHealthMonitor>` 按名称筛选：
+
+```csharp
+var monitors = provider.GetRequiredService<IEnumerable<IHealthMonitor>>();
+var monitor  = monitors.First(m => m.Name == "quote-feed");
+
+monitor.Degraded  += (_, e) => Console.WriteLine($"{e.MonitorName}: 降级");
+monitor.Recovered += (_, e) => Console.WriteLine($"{e.MonitorName}: 恢复");
+```
+
+也可以使用 `DynamicHealthMonitorManager`，它完全不依赖 DI，在 `netstandard2.0` 上同样可用。
 
 ### 发送心跳
 
