@@ -299,6 +299,27 @@ public class DynamicHealthMonitorManagerTests
         Assert.Null(manager.TryGet("missing"));
     }
 
+    [Fact]
+    public async Task ManagerDegraded_FiresForHandlerSubscribedAfterAdd()
+    {
+        using var manager = new DynamicHealthMonitorManager(new FakeSystemTimeProvider());
+
+        manager.Add("svc", new HealthMonitorOptions
+        {
+            DegradedThreshold = TimeSpan.FromMilliseconds(100),
+            CheckInterval = TimeSpan.FromMilliseconds(50),
+        });
+
+        // Subscribe AFTER adding the monitor
+        HealthDegradedEventArgs? captured = null;
+        manager.Degraded += (_, e) => captured = e;
+
+        await PollUntil(() => captured is not null, timeout: TimeSpan.FromSeconds(5));
+
+        Assert.NotNull(captured);
+        Assert.Equal("svc", captured.MonitorName);
+    }
+
     private static async Task PollUntil(Func<bool> condition, TimeSpan timeout)
     {
         var deadline = DateTime.UtcNow + timeout;
