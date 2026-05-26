@@ -3,6 +3,7 @@
 [![CI](https://github.com/coldhighsun/HealthMonitor/actions/workflows/ci.yml/badge.svg)](https://github.com/coldhighsun/HealthMonitor/actions/workflows/ci.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/HealthMonitor.Core)](https://www.nuget.org/packages/HealthMonitor.Core)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/HealthMonitor.Core)](https://www.nuget.org/packages/HealthMonitor.Core)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A lightweight .NET library for monitoring application health via periodic heartbeats. Supports dependency injection, multiple named monitors, and fires `Degraded` / `Recovered` events on state transitions.
 
@@ -120,7 +121,7 @@ monitor.Signal();
 ```csharp
 using var manager = new DynamicHealthMonitorManager();
 
-// Subscribe once on the manager — fires for all monitors, including those added later
+// Subscribe at any time — fires for all registered monitors, regardless of when they were added
 manager.Degraded  += (_, e) => Console.WriteLine($"{e.MonitorName} degraded");
 manager.Recovered += (_, e) => Console.WriteLine($"{e.MonitorName} recovered");
 
@@ -178,6 +179,7 @@ Build outputs land in `./artifacts/bin/`.
 [![CI](https://github.com/coldhighsun/HealthMonitor/actions/workflows/ci.yml/badge.svg)](https://github.com/coldhighsun/HealthMonitor/actions/workflows/ci.yml)
 [![NuGet 版本](https://img.shields.io/nuget/v/HealthMonitor.Core)](https://www.nuget.org/packages/HealthMonitor.Core)
 [![NuGet 下载量](https://img.shields.io/nuget/dt/HealthMonitor.Core)](https://www.nuget.org/packages/HealthMonitor.Core)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 轻量级 .NET 健康监控库，通过周期性心跳信号判断组件是否存活，在状态切换时触发 `Degraded` / `Recovered` 事件。支持依赖注入、多个命名监控器。
 
@@ -295,7 +297,7 @@ monitor.Signal();
 ```csharp
 using var manager = new DynamicHealthMonitorManager();
 
-// 在 manager 上订阅一次 — 对所有监控器生效，包括后续动态添加的
+// 可在任意时机订阅 — 对所有已注册的监控器生效，无论添加顺序
 manager.Degraded  += (_, e) => Console.WriteLine($"{e.MonitorName} 已降级");
 manager.Recovered += (_, e) => Console.WriteLine($"{e.MonitorName} 已恢复");
 
