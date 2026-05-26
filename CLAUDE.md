@@ -10,7 +10,7 @@ dotnet test           # Run all tests (multi-targets: net8.0, net9.0, net10.0)
 dotnet test --filter "FullyQualifiedName~SomeTest"  # Run a single test
 ```
 
-Build artifacts go to `/artifacts/bin/` (configured in `Directory.Build.props`).
+Build artifacts go to `/artifacts/bin/` (configured in `Directory.Build.props`). The solution also contains `examples/HealthMonitor.Examples/` with runnable usage examples.
 
 ## Architecture
 
@@ -37,7 +37,9 @@ Build artifacts go to `/artifacts/bin/` (configured in `Directory.Build.props`).
 
 ### DI registration
 
-`AddHealthMonitor()` registers monitors as keyed services (by name, .NET 8+) and via `IEnumerable<IHealthMonitor>` on all targets. The hosted service resolves all monitors through the coordinator.
+`AddHealthMonitor()` registers monitors as keyed services (by name, .NET 8+) and via `IEnumerable<IHealthMonitor>` on all targets. The hosted service resolves all monitors through the coordinator. The call is idempotent for the shared infrastructure (hosted service, coordinator) — call it once per monitor name.
+
+On `netstandard2.0` (no keyed DI), resolve a specific monitor by filtering `IEnumerable<IHealthMonitor>` by `Name`.
 
 ### Dynamic registration (no DI)
 
