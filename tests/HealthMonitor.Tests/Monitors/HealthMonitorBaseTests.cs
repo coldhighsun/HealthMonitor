@@ -218,6 +218,56 @@ public class HealthMonitorBaseTests
         return (monitor, clock, signalWatch, checkWatch, stateWatch);
     }
 
+    [Fact]
+    public void Recovered_Args_Timestamp_UsesWallClock()
+    {
+        var (monitor, clock, signalWatch, checkWatch, _) = CreateMonitor();
+
+        // Degrade first
+        signalWatch.Advance(TimeSpan.FromSeconds(31));
+        checkWatch.Advance(TimeSpan.FromSeconds(5));
+        monitor.Tick();
+
+        HealthRecoveredEventArgs? recovered = null;
+        ((IHealthMonitor)monitor).Recovered += (_, e) => recovered = e;
+
+        clock.Advance(TimeSpan.FromMinutes(1));
+        var expectedTime = clock.UtcNow;
+        ((IHealthMonitor)monitor).Signal();
+
+        Assert.NotNull(recovered);
+        Assert.Equal(expectedTime, recovered.Timestamp);
+    }
+
+    [Fact]
+    public void Degrade_Recover_Degrade_CycleWorks()
+    {
+        var (monitor, _, signalWatch, checkWatch, _) = CreateMonitor(degradedThreshold: TimeSpan.FromSeconds(30));
+
+        var degradedCount = 0;
+        var recoveredCount = 0;
+        ((IHealthMonitor)monitor).Degraded += (_, _) => degradedCount++;
+        ((IHealthMonitor)monitor).Recovered += (_, _) => recoveredCount++;
+
+        // First degradation
+        signalWatch.Advance(TimeSpan.FromSeconds(31));
+        checkWatch.Advance(TimeSpan.FromSeconds(5));
+        monitor.Tick();
+        Assert.Equal(1, degradedCount);
+
+        // Recovery
+        ((IHealthMonitor)monitor).Signal();
+        Assert.Equal(1, recoveredCount);
+        Assert.True(monitor.IsHealthy);
+
+        // Second degradation
+        signalWatch.Advance(TimeSpan.FromSeconds(31));
+        checkWatch.Advance(TimeSpan.FromSeconds(5));
+        monitor.Tick();
+        Assert.Equal(2, degradedCount);
+        Assert.False(monitor.IsHealthy);
+    }
+
     // ── Initial state ──────────────────────────────────────────────────────────
     // ── Degraded ───────────────────────────────────────────────────────────────
     // ── Signal / Recovered ─────────────────────────────────────────────────────

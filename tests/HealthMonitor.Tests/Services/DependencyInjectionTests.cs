@@ -86,6 +86,22 @@ public class DependencyInjectionTests
         Assert.Equal("quotes", monitors[0].Name);
     }
 
+    [Fact]
+    public void AddHealthMonitor_IsIdempotent_ForSharedInfrastructure()
+    {
+        using var provider = BuildProvider(s =>
+        {
+            s.AddHealthMonitor("quotes");
+            s.AddHealthMonitor("orders");
+        });
+
+        // Shared infrastructure (hosted service) should be registered exactly once
+        var hostedServices = provider.GetRequiredService<IEnumerable<IHostedService>>()
+            .Where(hs => hs.GetType().Name == "HealthMonitorHostedService")
+            .ToList();
+        Assert.Single(hostedServices);
+    }
+
     private static ServiceProvider BuildProvider(Action<IServiceCollection> configure)
     {
         var services = new ServiceCollection();
