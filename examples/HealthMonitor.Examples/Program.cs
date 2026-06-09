@@ -211,7 +211,7 @@ internal sealed class QuoteFeedSimulator : BackgroundService
     {
         await Task.WhenAll(
             SimulateFastFeed(stoppingToken),
-            SimulateSlowFeed(stoppingToken));
+            SimulateSlowFeed(stoppingToken)).ConfigureAwait(false);
     }
 
     private async Task SimulateFastFeed(CancellationToken ct)

@@ -41,7 +41,7 @@ internal sealed class HealthMonitorHostedService(
 
             try
             {
-                await Task.Delay(coordinator.MinCheckInterval, stoppingToken);
+                await Task.Delay(coordinator.MinCheckInterval, stoppingToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
