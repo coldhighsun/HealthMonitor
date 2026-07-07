@@ -10,7 +10,7 @@ dotnet test           # Run all tests (multi-targets: net8.0, net9.0, net10.0)
 dotnet test --filter "FullyQualifiedName~SomeTest"  # Run a single test
 ```
 
-Build artifacts go to `/artifacts/bin/` (configured in `Directory.Build.props`). The solution also contains `examples/HealthMonitor.Examples/` with runnable usage examples.
+Build artifacts go to `artifacts/` (via `UseArtifactsOutput` in `Directory.Build.props`). The solution also contains `examples/HealthMonitor.Examples/` with runnable usage examples. Package versions are managed centrally in `Directory.Packages.props` — update versions there, not in individual `.csproj` files.
 
 ## Architecture
 
@@ -53,7 +53,7 @@ Test classes follow the `[ComponentName]Tests` naming convention; test methods u
 
 ### Multi-targeting
 
-`HealthMonitor.Core` targets `netstandard2.0`, `net8.0`, `net9.0`, and `net10.0`. Tests target `net8.0`, `net9.0`, and `net10.0` only. Keyed DI services are only available on `net8.0`+. Use `#if NET8_0_OR_GREATER` guards when adding version-specific APIs.
+`HealthMonitor.Core` targets `netstandard2.0` and `net8.0`. Tests target `net8.0`, `net9.0`, and `net10.0` to verify runtime compatibility. Keyed DI services are only available on `net8.0`+. Use `#if NET8_0_OR_GREATER` guards when adding version-specific APIs.
 
 ### Versioning and CI
 
