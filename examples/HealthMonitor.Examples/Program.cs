@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using HealthMonitor.Core.Abstractions;
 using HealthMonitor.Core.Extensions;
 using HealthMonitor.Core.Monitors;
@@ -109,12 +110,12 @@ internal sealed class DynamicMonitorDemo(ILogger<DynamicMonitorDemo> logger) : B
 
         _ = SignalLoop(gateway, TimeSpan.FromSeconds(3), stoppingToken);
 
-        var workerSignalling = true;
+        var workerSignalling = new StrongBox<bool>(true);
         _ = Task.Run(async () =>
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                if (workerSignalling)
+                if (workerSignalling.Value)
                     worker.Signal();
                 await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken).ConfigureAwait(false);
             }
@@ -139,7 +140,7 @@ internal sealed class DynamicMonitorDemo(ILogger<DynamicMonitorDemo> logger) : B
         if (stoppingToken.IsCancellationRequested)
             return;
 
-        workerSignalling = false;
+        workerSignalling.Value = false;
         logger.LogInformation("[Dynamic] 'worker' signals paused — expect Degraded in ~8 s");
 
         // t=35s: resume worker → fires Recovered
@@ -147,7 +148,7 @@ internal sealed class DynamicMonitorDemo(ILogger<DynamicMonitorDemo> logger) : B
         if (stoppingToken.IsCancellationRequested)
             return;
 
-        workerSignalling = true;
+        workerSignalling.Value = true;
         worker.Signal();
         logger.LogInformation("[Dynamic] 'worker' signals resumed — expect Recovered");
 

@@ -22,8 +22,6 @@ A lightweight .NET library for monitoring application health via periodic heartb
 |---|---|
 | `netstandard2.0` | — |
 | `net8.0` | ✓ |
-| `net9.0` | ✓ |
-| `net10.0` | ✓ |
 
 ## Installation
 
@@ -198,8 +196,6 @@ Build outputs land in `./artifacts/bin/`.
 |---|---|
 | `netstandard2.0` | — |
 | `net8.0` | ✓ |
-| `net9.0` | ✓ |
-| `net10.0` | ✓ |
 
 ## 安装
 
