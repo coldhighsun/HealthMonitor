@@ -51,16 +51,14 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton(new HealthMonitorRegistration(options));
 
-#if NET8_0_OR_GREATER
-        // Keyed resolution by name — .NET 8+ only
+        // Keyed resolution by name
         services.AddKeyedSingleton<IHealthMonitor>(name, (sp, _) =>
         {
             var coordinator = sp.GetRequiredService<HealthMonitorCoordinator>();
             return coordinator.Monitors.Single(m => m.Name == name);
         });
-#endif
 
-        // Unkeyed enumerable — all target frameworks
+        // Unkeyed enumerable
         services.AddSingleton<IHealthMonitor>(sp =>
         {
             var coordinator = sp.GetRequiredService<HealthMonitorCoordinator>();

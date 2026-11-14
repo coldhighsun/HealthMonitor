@@ -109,7 +109,4 @@ public class DependencyInjectionTests
         configure(services);
         return services.BuildServiceProvider();
     }
-
-#if NET8_0_OR_GREATER
-#endif
 }

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 dotnet build          # Build all projects
-dotnet test           # Run all tests (multi-targets: net8.0, net9.0, net10.0)
+dotnet test           # Run all tests (net10.0)
 dotnet test --filter "FullyQualifiedName~SomeTest"  # Run a single test
 ```
 
@@ -37,9 +37,7 @@ Build artifacts go to `artifacts/` (via `UseArtifactsOutput` in `Directory.Build
 
 ### DI registration
 
-`AddHealthMonitor(name, configure?)` registers monitors as keyed services (by name, .NET 8+) and via `IEnumerable<IHealthMonitor>` on all targets. Shared infrastructure (`ISystemTimeProvider`, coordinator, hosted service) is registered once via `TryAddSingleton`/`TryAddEnumerable` — the call is idempotent for infrastructure, call it once per monitor name.
-
-On `netstandard2.0` (no keyed DI), resolve a specific monitor by filtering `IEnumerable<IHealthMonitor>` by `Name`.
+`AddHealthMonitor(name, configure?)` registers monitors as keyed services (by name) and via `IEnumerable<IHealthMonitor>`. Shared infrastructure (`ISystemTimeProvider`, coordinator, hosted service) is registered once via `TryAddSingleton`/`TryAddEnumerable` — the call is idempotent for infrastructure, call it once per monitor name.
 
 ### Dynamic registration (no DI)
 
@@ -51,9 +49,9 @@ On `netstandard2.0` (no keyed DI), resolve a specific monitor by filtering `IEnu
 
 Test classes follow the `[ComponentName]Tests` naming convention; test methods use `Verb_Scenario_Expected` (e.g., `Signal_WhenDegraded_FiresRecoveredImmediately`). Most test classes use a `CreateMonitor()` factory that returns a tuple of the monitor plus all injected fakes for precise time control without boilerplate.
 
-### Multi-targeting
+### Target framework
 
-`HealthMonitor.Core` targets `netstandard2.0` and `net8.0`. Tests target `net8.0`, `net9.0`, and `net10.0` to verify runtime compatibility. Keyed DI services are only available on `net8.0`+. Use `#if NET8_0_OR_GREATER` guards when adding version-specific APIs.
+All projects (`HealthMonitor.Core`, tests, examples) target `net10.0` only.
 
 ### Versioning and CI
 

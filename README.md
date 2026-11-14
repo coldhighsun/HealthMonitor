@@ -15,15 +15,12 @@ A lightweight .NET library for monitoring application health via periodic heartb
 - **Two events** — `Degraded` fires when no heartbeat is received within the threshold; `Recovered` fires immediately when a signal arrives while degraded
 - **DI-first** — integrates with `IServiceCollection` and runs as a `BackgroundService`
 - **Dynamic management** — `DynamicHealthMonitorManager` adds and removes monitors at runtime; each runs its own `Timer` with per-monitor options
-- **Keyed injection** — resolve a specific monitor by name via `IServiceProvider.GetRequiredKeyedService<IHealthMonitor>("name")` (.NET 8+)
+- **Keyed injection** — resolve a specific monitor by name via `IServiceProvider.GetRequiredKeyedService<IHealthMonitor>("name")` 
 - **Testable** — `IStopwatch` and `ISystemTimeProvider` abstractions decouple timing from wall-clock time
 
 ## Supported Frameworks
 
-| Target | Keyed DI (`GetRequiredKeyedService`) |
-|---|---|
-| `netstandard2.0` | — |
-| `net8.0` | ✓ |
+`net10.0`
 
 ## Installation
 
@@ -47,7 +44,7 @@ services.AddHealthMonitor("quote-feed", opt =>
 
 ### Subscribing to Events
 
-**By name (keyed service, .NET 8+):**
+**By name (keyed service):**
 
 ```csharp
 var monitor = provider.GetRequiredKeyedService<IHealthMonitor>("quote-feed");
@@ -68,20 +65,6 @@ foreach (var monitor in provider.GetRequiredService<IEnumerable<IHealthMonitor>>
     monitor.Recovered += (_, e) => Console.WriteLine($"{e.MonitorName}: recovered");
 }
 ```
-
-**`netstandard2.0` — resolve by name without keyed services:**
-
-Keyed DI is not available on `netstandard2.0`. Filter the `IEnumerable<IHealthMonitor>` by name instead:
-
-```csharp
-var monitors = provider.GetRequiredService<IEnumerable<IHealthMonitor>>();
-var monitor  = monitors.First(m => m.Name == "quote-feed");
-
-monitor.Degraded  += (_, e) => Console.WriteLine($"{e.MonitorName}: degraded");
-monitor.Recovered += (_, e) => Console.WriteLine($"{e.MonitorName}: recovered");
-```
-
-Alternatively, use `DynamicHealthMonitorManager` which requires no DI at all and is fully supported on `netstandard2.0`.
 
 ### Sending Heartbeats
 
