@@ -1,12 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <PackageId>HealthMonitor.Core</PackageId>
     <Authors>coldhighsun</Authors>
     <Description>A lightweight .NET library for monitoring application health via periodic heartbeats. Fires Degraded / Recovered events on state transitions.</Description>
