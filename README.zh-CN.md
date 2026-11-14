@@ -15,15 +15,12 @@
 - **两种事件** — 心跳超时触发 `Degraded`；降级期间收到信号立即触发 `Recovered`
 - **DI 优先** — 集成 `IServiceCollection`，以 `BackgroundService` 形式运行
 - **动态管理** — `DynamicHealthMonitorManager` 支持运行时动态添加/移除监控器，每个监控器有独立 `Timer` 和配置
-- **按名称注入** — 通过 `IServiceProvider.GetRequiredKeyedService<IHealthMonitor>("name")` 按名称解析（.NET 8+）
+- **按名称注入** — 通过 `IServiceProvider.GetRequiredKeyedService<IHealthMonitor>("name")` 按名称解析
 - **易于测试** — `IStopwatch` 和 `ISystemTimeProvider` 抽象解耦了时间依赖
 
 ## 支持的目标框架
 
-| 目标框架 | 键控 DI（`GetRequiredKeyedService`） |
-|---|---|
-| `netstandard2.0` | — |
-| `net8.0` | ✓ |
+`net10.0`
 
 ## 安装
 
@@ -47,7 +44,7 @@ services.AddHealthMonitor("quote-feed", opt =>
 
 ### 订阅事件
 
-**按名称（键控服务，.NET 8+）：**
+**按名称（键控服务）：**
 
 ```csharp
 var monitor = provider.GetRequiredKeyedService<IHealthMonitor>("quote-feed");
@@ -68,20 +65,6 @@ foreach (var monitor in provider.GetRequiredService<IEnumerable<IHealthMonitor>>
     monitor.Recovered += (_, e) => Console.WriteLine($"{e.MonitorName}: 恢复");
 }
 ```
-
-**`netstandard2.0` — 不使用键控服务按名称解析：**
-
-`netstandard2.0` 下不支持键控 DI，可通过 `IEnumerable<IHealthMonitor>` 按名称筛选：
-
-```csharp
-var monitors = provider.GetRequiredService<IEnumerable<IHealthMonitor>>();
-var monitor  = monitors.First(m => m.Name == "quote-feed");
-
-monitor.Degraded  += (_, e) => Console.WriteLine($"{e.MonitorName}: 降级");
-monitor.Recovered += (_, e) => Console.WriteLine($"{e.MonitorName}: 恢复");
-```
-
-也可以使用 `DynamicHealthMonitorManager`，它完全不依赖 DI，在 `netstandard2.0` 上同样可用。
 
 ### 发送心跳
 
